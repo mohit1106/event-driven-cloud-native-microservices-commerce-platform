@@ -1,0 +1,20 @@
+npx create-nx-workspace@latest .
+    stack - node
+    framework - express
+    application name - auth-service
+    dockerfile - yes
+    unit test - jest
+    eslint - nodeprettier - nodegithub actions - github
+
+nx g @nx/express:app api-gateway --directory=apps/api-gateway --e2eTestRunner=none
+
+
+---------------- run the nx project -----------------------------
+npx kill-port 8080
+npx nx reset cache
+npm run dev
+
+-------------------------------------------------------------------
+for nextjs frontend in nx
+    nx add @nx/next
+    nx g @nx/next:app apps/user-ui
