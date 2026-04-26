@@ -4,6 +4,7 @@
 dist
 tmp
 out-tsc
+startup.md
 
 # dependencies
 node_modules

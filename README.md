@@ -1,17 +1,116 @@
-A simple guide to run the e-commerce platform locally on your machine.
+# ElevenStore: Event-Driven Microservices E-Commerce Platform
 
-## 📋 Prerequisites
+Highly scalable, multi-vendor e-commerce platform using an event-driven microservices architecture (Nx Monorepo, Kafka, TensorFlow.js). Features distinct portals for Users, Sellers, and Admins.
+
+---
+
+## 🏗️ High-Level Design (HLD)
+
+```mermaid
+graph TD
+    %% Frontends
+    U_UI[User Next.js App] --> AG
+    S_UI[Seller Next.js App] --> AG
+    A_UI[Admin Next.js App] --> AG
+    
+    %% API Gateway
+    AG[API Gateway Express/Proxy]
+    
+    %% Microservices
+    AG --> Auth[Auth Service]
+    AG --> Prod[Product Service]
+    AG --> Order[Order Service]
+    AG --> Sell[Seller Service]
+    AG --> Adm[Admin Service]
+    AG --> Chat[Chatting Service Socket.io]
+    AG --> Rec[Recommendation Service]
+    
+    %% Async & DB Layer
+    Auth -.-> Mongo[(MongoDB Primary)]
+    Prod -.-> Mongo
+    Sell -.-> Mongo
+    Adm -.-> Mongo
+    Order -.-> Mongo
+    Order -.-> Stripe[Stripe Payment]
+    
+    Auth -.-> Redis[(Redis Cache)]
+    Prod -.-> Redis
+    
+    %% Event Driven Analytics
+    U_UI -- User Actions --> AG
+    AG --> KafkaBroker{{Kafka Message Broker}}
+    KafkaBroker -.-> KafkaConsumer[Kafka Consumer Service]
+    KafkaConsumer -. Batch Update .-> Mongo
+    
+    %% External Services
+    Prod -.-> IK[ImageKit CDN]
+    Auth -.-> NodeMail[Nodemailer / OTP]
+    Chat -.-> Firebase[Firebase Push Notifs]
+```
+
+---
+
+## 🔄 Core System Flows
+
+### Event-Driven Recommendation Flow
+```mermaid
+sequenceDiagram
+    participant User as User (Next.js)
+    participant API as API Gateway
+    participant Kafka as Kafka Broker (Topic: user-events)
+    participant Consumer as Kafka Consumer Service
+    participant DB as MongoDB
+    participant TF as TF.js Rec Engine
+    
+    User->>API: Click Product / Add to Cart
+    API->>Kafka: Publish Event { action: "add_to_cart", ... }
+    Kafka-->>Consumer: Poll Events
+    Consumer->>Consumer: Wait 3 seconds (Batching)
+    Consumer->>DB: Bulk Write Analytics
+    TF->>DB: Read Aggregated Analytics
+    TF->>TF: Train / Update Model
+    TF-->>User: Return Personalized Recommendations
+```
+
+### Order & Commission Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant Order as Order Service
+    participant Stripe as Stripe Gateway
+    participant DB as MongoDB
+    participant Admin
+    
+    User->>Order: Place Order + Discount Code
+    Order->>Stripe: Create Payment Intent
+    Stripe-->>User: Payment processing
+    User->>Stripe: Confirm Payment
+    Stripe-->>Order: Webhook (Payment Success)
+    Order->>DB: Update Order Status (Split: 90% Seller, 10% Admin)
+    Order->>User: Confirmation Email
+```
+
+---
+
+## 🗄️ Database Schema
+
+![Database Schema](./db_schema.svg)
+
+---
+
+## 🚀 Development & Startup Guide
+
+*A simple guide to run the e-commerce platform locally on your machine.*
+
+### 📋 Prerequisites
 
 - **Node.js** (v20.19.3)
 - **Docker Desktop** (for Kafka)
 - **pnpm** (recommended)
 
-## 🛠️ Quick Setup Guide
-
 ### 1. Download & Setup Project
 
 ```bash
-# Download the code from GitHub and unzip it
 # Navigate to the project root directory
 cd elevenstore
 
