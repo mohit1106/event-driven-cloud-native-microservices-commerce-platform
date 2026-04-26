@@ -18,7 +18,7 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
-  # Detect which services have changed
+  # Detect which services changed
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
